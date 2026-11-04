@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CourseCard } from "@/components/CourseCard";
+import { HomePostsCarousel } from "@/components/HomePostsCarousel";
 import { BookOpen } from "lucide-react";
 
 const Index = () => {
@@ -122,6 +123,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Swipeable Left/Right Posts Section */}
+        <HomePostsCarousel />
 
         <div className="flex items-center justify-between mb-8">
           <div>

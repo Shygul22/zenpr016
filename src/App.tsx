@@ -23,6 +23,7 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminLessons from "./pages/admin/AdminLessons";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminPosts from "./pages/admin/AdminPosts";
 import AdminRequests from "./pages/admin/AdminRequests";
 import AdminSupport from "./pages/admin/AdminSupport";
 import ApprovalStatus from "./pages/ApprovalStatus";
@@ -87,6 +88,9 @@ const App = () => (
             } />
             <Route path="/admin/payments" element={
               <ProtectedRoute adminOnly><MainLayout><AdminPayments /></MainLayout></ProtectedRoute>
+            } />
+            <Route path="/admin/posts" element={
+              <ProtectedRoute adminOnly><MainLayout><AdminPosts /></MainLayout></ProtectedRoute>
             } />
             <Route path="/admin/requests" element={
               <ProtectedRoute adminOnly><MainLayout><AdminRequests /></MainLayout></ProtectedRoute>

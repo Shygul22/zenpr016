@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { BookOpen, Users, GraduationCap, ChevronRight, Receipt, ClipboardCheck, MessageSquare } from "lucide-react";
+import { BookOpen, Users, GraduationCap, ChevronRight, Receipt, ClipboardCheck, MessageSquare, Megaphone } from "lucide-react";
 
 const AdminDashboard = () => {
   const { data: courseCount } = useQuery({
@@ -45,8 +45,17 @@ const AdminDashboard = () => {
     },
   });
 
+  const { data: postCount } = useQuery({
+    queryKey: ["admin-posts-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("posts").select("*", { count: "exact", head: true });
+      return count || 0;
+    },
+  });
+
   const stats = [
     { label: "Courses", value: courseCount, icon: BookOpen, href: "/admin/courses" },
+    { label: "Home Posts", value: postCount, icon: Megaphone, href: "/admin/posts" },
     { label: "Users", value: userCount, icon: Users, href: "/admin/users" },
     { label: "Revenue", value: `₹${(totalRevenue || 0).toLocaleString()}`, icon: Receipt, href: "/admin/payments" },
     { label: "Pending Requests", value: pendingRequests, icon: ClipboardCheck, href: "/admin/requests" },
@@ -81,6 +90,13 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <BookOpen className="h-5 w-5 text-primary" />
                 <span className="font-medium">Manage Courses</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link to="/admin/posts" className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted transition-colors">
+              <div className="flex items-center gap-3">
+                <Megaphone className="h-5 w-5 text-[#F37021]" />
+                <span className="font-medium">Manage Home Posts</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
