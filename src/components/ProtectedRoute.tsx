@@ -14,8 +14,8 @@ export const ProtectedRoute = ({ children, adminOnly = false }: { children: Reac
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Redirect to approval status page if not approved and not an admin
-  if (!isAdmin && status !== "approved") {
+  // Only redirect if explicitly rejected by admin
+  if (!isAdmin && status === "rejected") {
     return <Navigate to="/approval-status" replace />;
   }
 

@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   status: null,
   rejectionReason: null,
   loading: true,
-  signOut: async () => {},
+  signOut: async () => { },
   signIn: async () => ({ data: null, error: new Error("Not implemented") }),
   signUp: async () => ({ data: null, error: new Error("Not implemented") }),
 });
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", profileId);
-    
+
     const isUserAdmin = roles?.some(r => r.role === 'admin');
     setIsAdmin(!!isUserAdmin);
 
@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .select("auto_approve_users")
         .eq("id", "global")
         .maybeSingle();
-      
+
       const autoApprove = settings?.auto_approve_users || false;
 
       const uuid = crypto.randomUUID();
@@ -166,7 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email,
           password,
           phone: phone || null,
-          status: autoApprove ? "approved" : "pending",
+          status: "approved",
         })
         .select()
         .maybeSingle();
@@ -175,8 +175,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { data: null, error };
       }
 
-      if (autoApprove && newProfile) {
-        // Auto-enroll in default courses
+      if (newProfile) {
+        // Auto-enroll in default courses if any are set
         const { data: defaultCourses } = await supabase
           .from("courses")
           .select("id")

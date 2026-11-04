@@ -28,12 +28,7 @@ const Signup = () => {
       if (error) {
         toast.error(error.message || "An error occurred during registration.");
       } else {
-        toast.success("Account created successfully!");
-        if (data?.status === "approved") {
-          toast.success("Your account is active. Welcome!");
-        } else {
-          toast.info("Your application is pending administrator approval.");
-        }
+        toast.success("Account created successfully! Welcome to Option Tamil Trader.");
         navigate("/");
       }
     } catch (err: any) {
