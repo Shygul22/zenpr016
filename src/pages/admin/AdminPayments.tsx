@@ -232,11 +232,11 @@ const AdminPayments = () => {
     const email = student?.email?.toLowerCase() || "";
     const courseTitle = course?.title?.toLowerCase() || "";
     const searchLower = search.toLowerCase();
-    
+
     const matchesSearch = name.includes(searchLower) || email.includes(searchLower) || courseTitle.includes(searchLower) || p.payment_method?.toLowerCase().includes(searchLower);
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
     const matchesMethod = methodFilter === "all" || (methodFilter === "Razorpay" ? p.payment_method?.toLowerCase().includes("razorpay") : p.payment_method === methodFilter);
-    
+
     return matchesSearch && matchesStatus && matchesMethod;
   });
 
@@ -282,7 +282,7 @@ const AdminPayments = () => {
             user_id: form.user_id,
             course_id: form.course_id,
           });
-        
+
         if (enrollError) {
           console.error("Auto-enrollment failed:", enrollError);
           toast.warning("Payment recorded, but auto-enrollment failed.");
@@ -342,8 +342,8 @@ const AdminPayments = () => {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search by student name or email..." 
+              <Input
+                placeholder="Search by student name or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-11 bg-muted/30 border-none focus-visible:ring-primary"
@@ -393,69 +393,69 @@ const AdminPayments = () => {
           <div className="rounded-lg border bg-card overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Method</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments?.map((payment: any) => {
-                  const student = payment.profiles || profileMap[payment.user_id];
-                  const course = payment.courses || courseMap[payment.course_id];
-                  return (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm md:text-base text-foreground">
-                            {student?.name || "Student (" + (payment.user_id?.slice(0, 8) || "—") + ")"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {student?.email || student?.phone || "No email available"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">
-                          {course?.title || (payment.course_id ? "Course ID: " + payment.course_id.slice(0, 8) : "Manual Adjustment")}
-                        </span>
-                      </TableCell>
-                    <TableCell className="font-semibold">₹{Number(payment.amount).toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge variant={payment.status === "completed" ? "default" : payment.status === "failed" ? "destructive" : "secondary"}>
-                        {payment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden md:table-cell">
-                      {format(new Date(payment.created_at), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
-                      {payment.payment_method?.toLowerCase().includes("razorpay") ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-mono font-medium text-[11px] border border-primary/20">
-                          {payment.payment_method}
-                        </span>
-                      ) : (
-                        <span className="uppercase tracking-wider">{payment.payment_method}</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-                {payments?.length === 0 && (
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No payment records found
-                    </TableCell>
+                    <TableHead>User</TableHead>
+                    <TableHead>Course</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Method</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredPayments?.map((payment: any) => {
+                    const student = payment.profiles || profileMap[payment.user_id];
+                    const course = payment.courses || courseMap[payment.course_id];
+                    return (
+                      <TableRow key={payment.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-sm md:text-base text-foreground">
+                              {student?.name || "Student (" + (payment.user_id?.slice(0, 8) || "—") + ")"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {student?.email || student?.phone || "No email available"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {course?.title || (payment.course_id ? "Course ID: " + payment.course_id.slice(0, 8) : "Manual Adjustment")}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-semibold">₹{Number(payment.amount).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={payment.status === "completed" ? "default" : payment.status === "failed" ? "destructive" : "secondary"}>
+                            {payment.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden md:table-cell">
+                          {format(new Date(payment.created_at), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
+                          {payment.payment_method?.toLowerCase().includes("razorpay") ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-mono font-medium text-[11px] border border-primary/20">
+                              {payment.payment_method}
+                            </span>
+                          ) : (
+                            <span className="uppercase tracking-wider">{payment.payment_method}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {payments?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No payment records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </div>
         )}
 
         <Dialog open={isAdding} onOpenChange={setIsAdding}>
@@ -506,10 +506,10 @@ const AdminPayments = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Amount (₹)</Label>
-                  <Input 
-                    type="number" 
-                    value={form.amount} 
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })} 
+                  <Input
+                    type="number"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
