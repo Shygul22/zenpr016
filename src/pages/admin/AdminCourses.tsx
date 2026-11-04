@@ -111,9 +111,9 @@ const AdminCourses = () => {
 
   const filteredCourses = courses?.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-                          (statusFilter === "published" && course.published) || 
-                          (statusFilter === "draft" && !course.published);
+    const matchesStatus = statusFilter === "all" ||
+      (statusFilter === "published" && course.published) ||
+      (statusFilter === "draft" && !course.published);
     return matchesSearch && matchesStatus;
   });
 
@@ -212,14 +212,14 @@ const AdminCourses = () => {
           <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <div className="relative max-w-xs w-full">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search courses..." 
+              <Input
+                placeholder="Search courses..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 pr-8"
               />
               {search && (
-                <button 
+                <button
                   onClick={() => setSearch("")}
                   className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
                 >
@@ -252,118 +252,118 @@ const AdminCourses = () => {
                   className="space-y-4"
                   onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }}
                 >
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Course Price (₹)</Label>
-                  <Input 
-                    type="number" 
-                    value={form.price} 
-                    onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} 
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} />
-                </div>
-                <div className="space-y-3">
-                  <Label>Course Thumbnail</Label>
-                  <div className="flex flex-col gap-4">
-                    {form.thumbnail_url && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-                        <img 
-                          src={form.thumbnail_url.replace(
-                            "mfbyllgfcbihqxuukgcp.supabase.co",
-                            "vowsjebbiusziwotxfhz.supabase.co"
-                          )} 
-                          alt="Thumbnail preview" 
-                          className="h-full w-full object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                          onClick={() => setForm({ ...form, thumbnail_url: "" })}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex-1">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          disabled={isUploading}
-                          className="hidden"
-                          id="thumbnail-upload"
-                        />
-                        <Label
-                          htmlFor="thumbnail-upload"
-                          className={`flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/5 transition-colors hover:bg-muted/10 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
-                        >
-                          {isUploading ? (
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                          ) : (
-                            <>
-                              <Upload className="mb-1 h-5 w-5 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">Click to upload image</span>
-                            </>
-                          )}
-                        </Label>
-                      </div>
-                      
-                      <div className="flex-1 space-y-1">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Or paste URL</p>
-                        <Input 
-                          value={form.thumbnail_url} 
-                          onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })} 
-                          placeholder="https://..."
-                          className="h-8 text-xs"
-                        />
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Course Price (₹)</Label>
+                    <Input
+                      type="number"
+                      value={form.price}
+                      onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} />
+                  </div>
+                  <div className="space-y-3">
+                    <Label>Course Thumbnail</Label>
+                    <div className="flex flex-col gap-4">
+                      {form.thumbnail_url && (
+                        <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                          <img
+                            src={form.thumbnail_url.replace(
+                              "mfbyllgfcbihqxuukgcp.supabase.co",
+                              "vowsjebbiusziwotxfhz.supabase.co"
+                            )}
+                            alt="Thumbnail preview"
+                            className="h-full w-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                            onClick={() => setForm({ ...form, thumbnail_url: "" })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            disabled={isUploading}
+                            className="hidden"
+                            id="thumbnail-upload"
+                          />
+                          <Label
+                            htmlFor="thumbnail-upload"
+                            className={`flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/5 transition-colors hover:bg-muted/10 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                          >
+                            {isUploading ? (
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            ) : (
+                              <>
+                                <Upload className="mb-1 h-5 w-5 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">Click to upload image</span>
+                              </>
+                            )}
+                          </Label>
+                        </div>
+
+                        <div className="flex-1 space-y-1">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">Or paste URL</p>
+                          <Input
+                            value={form.thumbnail_url}
+                            onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
+                            placeholder="https://..."
+                            className="h-8 text-xs"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={form.published} onCheckedChange={(c) => setForm({ ...form, published: c })} />
-                    <Label>Published</Label>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={form.published} onCheckedChange={(c) => setForm({ ...form, published: c })} />
+                      <Label>Published</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={form.is_default} onCheckedChange={(c) => setForm({ ...form, is_default: c })} />
+                      <Label>Free resources</Label>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={form.is_default} onCheckedChange={(c) => setForm({ ...form, is_default: c })} />
-                    <Label>Free resources</Label>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? "Saving..." : "Save Course"}
-                </Button>
-                {editing && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                    onClick={() => {
-                      setDialogOpen(false);
-                      navigate(`/courses/${editing.id}`);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" /> Preview Course
+                  <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? "Saving..." : "Save Course"}
                   </Button>
-                )}
-              </form>
-            </DialogContent>
-          </Dialog>
+                  {editing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        navigate(`/courses/${editing.id}`);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" /> Preview Course
+                    </Button>
+                  )}
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      </div>
 
-      {isLoading ? (
+        {isLoading ? (
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-muted rounded" />)}
           </div>
@@ -483,8 +483,8 @@ const AdminCourses = () => {
                     u.status === "approved"
                       ? "bg-green-500/10 text-green-600 border-green-200"
                       : u.status === "rejected"
-                      ? "bg-red-500/10 text-red-600 border-red-200"
-                      : "bg-yellow-500/10 text-yellow-600 border-yellow-200";
+                        ? "bg-red-500/10 text-red-600 border-red-200"
+                        : "bg-yellow-500/10 text-yellow-600 border-yellow-200";
                   return (
                     <div
                       key={u.id}

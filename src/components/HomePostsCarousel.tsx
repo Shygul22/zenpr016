@@ -78,49 +78,49 @@ export const CATEGORY_OPTIONS: {
   placeholder: string;
   defaultCta: string;
 }[] = [
-  {
-    value: "announcement",
-    label: "📢 Announcement",
-    icon: Megaphone,
-    placeholder: "https://optiontamiltrader.sbs/notice",
-    defaultCta: "Read Announcement",
-  },
-  {
-    value: "free_indicator",
-    label: "📈 Free Indicator Link",
-    icon: TrendingUp,
-    placeholder: "https://in.tradingview.com/script/...",
-    defaultCta: "Get Free Indicator",
-  },
-  {
-    value: "ticket",
-    label: "🎟️ Event / Ticket Link",
-    icon: Ticket,
-    placeholder: "https://events.optiontamiltrader.sbs/ticket",
-    defaultCta: "Get Tickets",
-  },
-  {
-    value: "google_form",
-    label: "📝 Google Form",
-    icon: FileText,
-    placeholder: "https://forms.gle/...",
-    defaultCta: "Fill Google Form",
-  },
-  {
-    value: "youtube",
-    label: "🎥 YouTube Video / Live",
-    icon: Youtube,
-    placeholder: "https://youtube.com/watch?v=...",
-    defaultCta: "Watch on YouTube",
-  },
-  {
-    value: "telegram",
-    label: "✈️ Telegram Channel Link",
-    icon: Send,
-    placeholder: "https://t.me/optiontamiltrader",
-    defaultCta: "Join Telegram Channel",
-  },
-];
+    {
+      value: "announcement",
+      label: "📢 Announcement",
+      icon: Megaphone,
+      placeholder: "https://optiontamiltrader.sbs/notice",
+      defaultCta: "Read Announcement",
+    },
+    {
+      value: "free_indicator",
+      label: "📈 Free Indicator Link",
+      icon: TrendingUp,
+      placeholder: "https://in.tradingview.com/script/...",
+      defaultCta: "Get Free Indicator",
+    },
+    {
+      value: "ticket",
+      label: "🎟️ Event / Ticket Link",
+      icon: Ticket,
+      placeholder: "https://events.optiontamiltrader.sbs/ticket",
+      defaultCta: "Get Tickets",
+    },
+    {
+      value: "google_form",
+      label: "📝 Google Form",
+      icon: FileText,
+      placeholder: "https://forms.gle/...",
+      defaultCta: "Fill Google Form",
+    },
+    {
+      value: "youtube",
+      label: "🎥 YouTube Video / Live",
+      icon: Youtube,
+      placeholder: "https://youtube.com/watch?v=...",
+      defaultCta: "Watch on YouTube",
+    },
+    {
+      value: "telegram",
+      label: "✈️ Telegram Channel Link",
+      icon: Send,
+      placeholder: "https://t.me/optiontamiltrader",
+      defaultCta: "Join Telegram Channel",
+    },
+  ];
 
 export const getCategoryConfig = (category: PostCategory) => {
   switch (category) {
