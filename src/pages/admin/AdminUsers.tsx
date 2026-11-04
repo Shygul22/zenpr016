@@ -46,6 +46,10 @@ import {
   Unlock,
   AlertCircle,
   Check,
+  Pencil,
+  Eye,
+  EyeOff,
+  RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
@@ -66,6 +70,16 @@ const AdminUsers = () => {
   const [manualAccessOpen, setManualAccessOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
+
+  // Edit User Profile & Password State
+  const [editUserOpen, setEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editStatus, setEditStatus] = useState("approved");
+  const [editPassword, setEditPassword] = useState("");
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   // Check if opened via query param ?action=manual-access
   useEffect(() => {
@@ -167,6 +181,51 @@ const AdminUsers = () => {
           p.name?.toLowerCase().includes(emailInput.toLowerCase().trim())
       ).slice(0, 5)
     : [];
+
+  const handleOpenEditUser = (profile: any) => {
+    setEditingUser(profile);
+    setEditName(profile.name || "");
+    setEditEmail(profile.email || "");
+    setEditPhone(profile.phone || "");
+    setEditStatus(profile.status || "approved");
+    setEditPassword(profile.password || "");
+    setShowEditPassword(false);
+    setEditUserOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+    if (!editEmail.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const updatePayload: any = {
+        name: editName.trim() || null,
+        email: editEmail.trim().toLowerCase(),
+        phone: editPhone.trim() || null,
+        status: editStatus,
+        password: editPassword,
+      };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", editingUser.id);
+
+      if (error) throw error;
+
+      toast.success(`User ${editEmail} updated successfully!`);
+      queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+      setEditUserOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update user profile");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleOpenAccessForUser = (userId: string) => {
     setSelectedUserId(userId);
@@ -517,12 +576,19 @@ const AdminUsers = () => {
                 {filteredProfiles?.map((profile) => (
                   <TableRow key={profile.id} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer group"
+                        onClick={() => handleOpenEditUser(profile)}
+                        title="Click to edit profile & password"
+                      >
+                        <div className="h-9 w-9 rounded-full bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center shrink-0 transition-colors">
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm">{profile.name || "—"}</span>
+                          <span className="font-semibold text-sm group-hover:text-primary transition-colors flex items-center gap-1.5">
+                            {profile.name || "—"}
+                            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
+                          </span>
                           {adminUserIds?.includes(profile.id) && (
                             <span className="text-[10px] uppercase font-bold text-primary flex items-center gap-1">
                               <ShieldCheck className="h-3 w-3" /> Admin
@@ -545,6 +611,18 @@ const AdminUsers = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5 flex-wrap">
+                        {/* Edit User Profile & Password Button */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 border-border/80 hover:bg-primary/10 hover:text-primary hover:border-primary/40 rounded-lg text-xs font-medium"
+                          onClick={() => handleOpenEditUser(profile)}
+                          title="Edit Profile & Password"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span>Edit</span>
+                        </Button>
+
                         {/* Direct Course Access Button */}
                         <Button
                           size="sm"
@@ -868,6 +946,144 @@ const AdminUsers = () => {
                 className="rounded-xl"
               >
                 {isSubmitting ? "Rejecting..." : "Reject User"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Profile & Password Dialog */}
+        <Dialog open={editUserOpen} onOpenChange={setEditUserOpen}>
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-3xl p-6">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="h-9 w-9 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Pencil className="h-4 w-4" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold font-serif">
+                    Edit Student Profile & Password
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    Update student account details or set a new password directly.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-3">
+              {/* Name */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Student Full Name</Label>
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. Rahul Kumar"
+                  className="rounded-xl h-10 text-sm"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Registered Email ID *</Label>
+                <Input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="student@example.com"
+                  className="rounded-xl h-10 font-mono text-sm"
+                  required
+                />
+              </div>
+
+              {/* Mobile Phone */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Registered Mobile Number</Label>
+                <Input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="rounded-xl h-10 font-mono text-sm"
+                />
+              </div>
+
+              {/* Account Status */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Account Status</Label>
+                <Select value={editStatus} onValueChange={setEditStatus}>
+                  <SelectTrigger className="rounded-xl h-10">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="approved">Approved (Active Access)</SelectItem>
+                    <SelectItem value="pending">Pending Review</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Password Section */}
+              <div className="pt-2 border-t border-border/50 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <KeyRound className="h-4 w-4 text-[#F37021]" />
+                    <Label className="text-xs font-semibold text-foreground">
+                      Student Password
+                    </Label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const randomPass = "OTT@" + Math.floor(1000 + Math.random() * 9000);
+                      setEditPassword(randomPass);
+                      setShowEditPassword(true);
+                      toast.info(`Generated password: ${randomPass}`);
+                    }}
+                    className="text-[11px] text-[#F37021] hover:underline flex items-center gap-1 font-medium"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    <span>Generate Random</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    type={showEditPassword ? "text" : "password"}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="pr-10 rounded-xl h-10 font-mono text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                  >
+                    {showEditPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  You can directly change or view this student's login password. They can use this password to sign in immediately.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setEditUserOpen(false)}
+                className="rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveUser}
+                disabled={isSubmitting}
+                className="bg-[#006837] hover:bg-[#00522c] text-white rounded-xl shadow-md"
+              >
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </DialogContent>
