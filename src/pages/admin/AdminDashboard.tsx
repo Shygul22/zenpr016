@@ -93,6 +93,16 @@ const AdminDashboard = () => {
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
+            <Link to="/admin/users?action=manual-access" className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors">
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                <div>
+                  <span className="font-medium block text-foreground">Manual Course Access</span>
+                  <span className="text-[11px] text-muted-foreground">Grant/revoke student access by email</span>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-primary" />
+            </Link>
             <Link to="/admin/posts" className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted transition-colors">
               <div className="flex items-center gap-3">
                 <Megaphone className="h-5 w-5 text-[#F37021]" />

@@ -96,11 +96,17 @@ const AdminCourses = () => {
       const { error } = await supabase
         .from("enrollments")
         .upsert({ user_id: userId, course_id: accessCourseId }, { onConflict: "user_id,course_id" });
-      if (error) toast.error(error.message);
-      else toast.success("Access granted");
+      if (error) {
+        toast.error(error.message);
+      } else {
+        // Automatically ensure user is approved so they can access the app immediately
+        await supabase.from("profiles").update({ status: "approved", rejection_reason: null }).eq("id", userId);
+        toast.success("Access granted and user approved");
+      }
     }
     refetchEnrollments();
     queryClient.invalidateQueries({ queryKey: ["admin-enrollment-counts"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
   };
 
   const filteredCourses = courses?.filter((course) => {
