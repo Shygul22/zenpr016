@@ -10,47 +10,73 @@ type CourseCardProps = {
   description: string;
   thumbnail_url: string;
   lessonCount: number;
+  price?: number;
   progress?: number; // 0-100
 };
 
-export const CourseCard = ({ id, title, description, thumbnail_url, lessonCount, progress }: CourseCardProps) => {
+export const CourseCard = ({ id, title, description, thumbnail_url, lessonCount, price, progress }: CourseCardProps) => {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <Link to={`/courses/${id}`}>
-      <Card className="group overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5">
-        <div className="aspect-video overflow-hidden bg-muted">
+    <Link to={`/courses/${id}`} className="block group">
+      <div className="glass-card glass-card-hover rounded-2xl overflow-hidden border border-border/60 hover:border-primary/50 relative flex flex-col h-full">
+        {/* Subtle top shimmer highlight */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent z-10" />
+
+        <div className="aspect-video overflow-hidden bg-muted relative">
           {thumbnail_url && !imageError ? (
             <img
               src={thumbnail_url}
               alt={title}
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <BookOpen className="h-12 w-12 text-muted-foreground/40" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-[#F37021]/10">
+              <BookOpen className="h-12 w-12 text-primary/40" />
+            </div>
+          )}
+
+          {/* Floating Glass Pill for Lesson Count */}
+          <div className="absolute top-3 right-3 glass-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs font-semibold text-foreground shadow-sm">
+            <BookOpen className="h-3.5 w-3.5 text-primary" />
+            <span>{lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</span>
+          </div>
+
+          {/* Floating Price Pill */}
+          {price !== undefined && (
+            <div className="absolute bottom-3 left-3 glass-pill px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
+              {price > 0 ? (
+                <span className="text-foreground">₹{price.toLocaleString()}</span>
+              ) : (
+                <span className="text-primary">FREE</span>
+              )}
             </div>
           )}
         </div>
-        <CardContent className="p-5">
-          <h3 className="font-semibold text-lg leading-snug line-clamp-2 mb-1.5">{title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
-        </CardContent>
-        <CardFooter className="px-5 pb-5 pt-0 flex flex-col items-start gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <BookOpen className="h-3.5 w-3.5" />
-            <span>{lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</span>
+
+        <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-lg leading-snug line-clamp-2 mb-1.5 group-hover:text-primary transition-colors duration-200">
+              {title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {description}
+            </p>
           </div>
+
           {progress !== undefined && (
-            <div className="w-full space-y-1">
-              <Progress value={progress} className="h-1.5" />
-              <p className="text-xs text-muted-foreground">{Math.round(progress)}% complete</p>
+            <div className="w-full space-y-1.5 pt-2 border-t border-border/40">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground font-medium">Progress</span>
+                <span className="font-semibold text-[#F37021]">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2 bg-muted/60" />
             </div>
           )}
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 };

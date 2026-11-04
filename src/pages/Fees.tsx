@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -35,12 +34,11 @@ const Fees = () => {
     },
   });
 
-  const totalPaid = payments?.reduce((acc: number, curr: any) => 
+  const totalPaid = payments?.reduce((acc: number, curr: any) =>
     curr.status === "completed" ? acc + Number(curr.amount) : acc, 0) || 0;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Navbar />
+    <div className="min-h-screen">
       <main className="container py-10">
         <div className="flex flex-col gap-8">
           <div>
@@ -49,36 +47,42 @@ const Fees = () => {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-             <Card className="border-none shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Paid</CardTitle>
-                <Receipt className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold font-serif">₹{totalPaid.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-none shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active Courses</CardTitle>
-                <CreditCard className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold font-serif">{payments?.filter((p: any) => p.status === "completed").length || 0}</p>
-              </CardContent>
-            </Card>
+            <div className="glass-card rounded-2xl p-6 border border-white/50 dark:border-white/10 shadow-sm relative overflow-hidden group hover:border-primary/40 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/15 transition-all" />
+              <div className="flex flex-row items-center justify-between pb-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Paid</span>
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <Receipt className="h-5 w-5" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold font-serif text-foreground">₹{totalPaid.toLocaleString()}</p>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6 border border-white/50 dark:border-white/10 shadow-sm relative overflow-hidden group hover:border-[#F37021]/40 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#F37021]/10 rounded-full blur-2xl group-hover:bg-[#F37021]/15 transition-all" />
+              <div className="flex flex-row items-center justify-between pb-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Courses</span>
+                <div className="p-2 rounded-xl bg-[#F37021]/10 text-[#F37021]">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold font-serif text-foreground">{payments?.filter((p: any) => p.status === "completed").length || 0}</p>
+            </div>
           </div>
 
-          <Card className="border-none shadow-md overflow-hidden">
-            <CardHeader className="bg-card">
-              <div className="flex items-center gap-2">
-                <History className="h-5 w-5 text-primary" />
-                <CardTitle>Payment History</CardTitle>
+          <div className="glass-card rounded-3xl border border-white/50 dark:border-white/10 shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-border/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <History className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-serif">Payment History</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">A detailed list of all your transactions.</p>
+                </div>
               </div>
-              <CardDescription>A detailed list of all your transactions.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+            </div>
+            <div className="p-0">
               {isLoading ? (
                 <div className="p-8 text-center text-muted-foreground animate-pulse">Loading history...</div>
               ) : (
@@ -107,8 +111,14 @@ const Fees = () => {
                             {payment.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right pr-6 text-xs uppercase text-muted-foreground hidden md:table-cell">
-                          {payment.payment_method}
+                        <TableCell className="text-right pr-6 text-xs text-muted-foreground hidden md:table-cell">
+                          {payment.payment_method?.toLowerCase().includes("razorpay") ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-mono font-medium text-[11px] border border-primary/20">
+                              {payment.payment_method}
+                            </span>
+                          ) : (
+                            <span className="uppercase tracking-wider">{payment.payment_method}</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -122,8 +132,8 @@ const Fees = () => {
                   </TableBody>
                 </Table>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CourseCard } from "@/components/CourseCard";
-import { Navbar } from "@/components/Navbar";
 import { BookOpen } from "lucide-react";
 
 const Index = () => {
@@ -86,24 +85,71 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
-      <main className="container py-10">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold font-serif tracking-tight mb-2">Explore Courses</h1>
-          <p className="text-lg text-muted-foreground">Learn at your own pace with our curated courses</p>
+      <main className="container py-8 md:py-12">
+        {/* Modern Glass Hero Banner */}
+        <div className="relative glass-card border border-white/50 dark:border-white/10 rounded-3xl p-8 md:p-12 mb-12 shadow-xl overflow-hidden">
+          {/* Subtle ambient glow spots inside card */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#006837]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-1/3 w-64 h-64 bg-[#F37021]/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-foreground border border-white/40 dark:border-white/10 shadow-sm">
+              <span className="flex h-2 w-2 rounded-full bg-[#F37021]" />
+              <span className="text-[#006837] dark:text-[#20B76A] font-bold">Premium Trading Education</span>
+            </div>
+
+            <h1 className="text-3xl md:text-5xl font-bold font-serif tracking-tight leading-tight">
+              Master Option Trading with{" "}
+              <span className="bg-gradient-to-r from-[#006837] to-[#F37021] bg-clip-text text-transparent">
+                Confidence
+              </span>
+            </h1>
+
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Learn practical option strategies, risk management, and market psychology tailored for Tamil traders.
+            </p>
+
+            <div className="flex flex-wrap gap-2.5 pt-2">
+              <span className="glass-pill text-xs px-3 py-1 rounded-full text-muted-foreground border border-white/30 dark:border-white/5">
+                ⚡ Real Market Case Studies
+              </span>
+              <span className="glass-pill text-xs px-3 py-1 rounded-full text-muted-foreground border border-white/30 dark:border-white/5">
+                📈 Practical Tamil Lessons
+              </span>
+              <span className="glass-pill text-xs px-3 py-1 rounded-full text-muted-foreground border border-white/30 dark:border-white/5">
+                🛡️ Capital Protection Frameworks
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold font-serif tracking-tight">Available Courses</h2>
+            <p className="text-sm text-muted-foreground mt-1">Explore our expert-curated modules</p>
+          </div>
+          {courses && courses.length > 0 && (
+            <span className="glass-pill px-3 py-1 rounded-full text-xs font-semibold text-primary">
+              {courses.length} {courses.length === 1 ? "Course" : "Courses"} Available
+            </span>
+          )}
         </div>
 
         {isLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="aspect-[4/3] animate-pulse rounded-lg bg-muted" />
+              <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl glass-card bg-muted/40" />
             ))}
           </div>
         ) : courses?.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <BookOpen className="h-16 w-16 text-muted-foreground/30 mb-4" />
+          <div className="glass-card rounded-3xl flex flex-col items-center justify-center py-20 px-4 text-center border border-white/30 dark:border-white/5">
+            <div className="p-4 rounded-2xl bg-primary/10 text-primary mb-4">
+              <BookOpen className="h-12 w-12" />
+            </div>
             <h2 className="text-xl font-semibold mb-1">No courses yet</h2>
-            <p className="text-muted-foreground">Check back soon for new content!</p>
+            <p className="text-muted-foreground text-sm max-w-sm">
+              We are finalizing exciting curriculum updates. Please check back shortly!
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -115,6 +161,7 @@ const Index = () => {
                 description={course.description}
                 thumbnail_url={course.thumbnail_url}
                 lessonCount={lessonCounts?.[course.id] || 0}
+                price={course.price}
                 progress={enrollments?.includes(course.id) ? progressMap?.[course.id] : undefined}
               />
             ))}

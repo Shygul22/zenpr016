@@ -15,79 +15,83 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 10%;
 
-    --primary: 220 65% 48%;
+    /* Primary: Forest Green (#006837) */
+    --primary: 152 100% 20%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 20% 10%;
+    /* Secondary: Vibrant Orange (#F37021) */
+    --secondary: 23 90% 54%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
+    --muted: 150 10% 96%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 220 14% 94%;
-    --accent-foreground: 220 20% 10%;
+    --accent: 152 35% 94%;
+    --accent-foreground: 152 100% 20%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 220 65% 48%;
+    --border: 152 15% 90%;
+    --input: 152 15% 90%;
+    --ring: 152 100% 20%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 220 65% 48%;
+    --sidebar-primary: 152 100% 20%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 152 25% 95%;
+    --sidebar-accent-foreground: 152 100% 20%;
+    --sidebar-border: 152 12% 91%;
+    --sidebar-ring: 152 100% 20%;
 
-    --success: 142 71% 45%;
+    --success: 152 100% 24%;
     --success-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 220 20% 6%;
-    --foreground: 0 0% 95%;
+    --background: 200 25% 6%;
+    --foreground: 0 0% 96%;
 
-    --card: 220 20% 8%;
-    --card-foreground: 0 0% 95%;
+    --card: 200 25% 9%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 220 20% 8%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 200 25% 9%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 220 65% 55%;
+    /* Primary: Forest Green (Luminous for dark mode readability, #1E9D58) */
+    --primary: 152 68% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 16%;
-    --secondary-foreground: 0 0% 95%;
+    /* Secondary: Vibrant Orange (#F37021) */
+    --secondary: 23 92% 56%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 16%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 200 15% 15%;
+    --muted-foreground: 200 10% 65%;
 
-    --accent: 220 14% 16%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 152 30% 16%;
+    --accent-foreground: 152 68% 50%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 220 65% 55%;
+    --border: 200 15% 18%;
+    --input: 200 15% 18%;
+    --ring: 152 68% 42%;
 
-    --sidebar-background: 220 20% 8%;
+    --sidebar-background: 200 25% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 220 65% 55%;
+    --sidebar-primary: 152 68% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent: 152 25% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 14% 18%;
-    --sidebar-ring: 220 65% 55%;
+    --sidebar-border: 200 15% 18%;
+    --sidebar-ring: 152 68% 42%;
 
-    --success: 142 71% 45%;
+    --success: 152 68% 42%;
     --success-foreground: 0 0% 100%;
   }
 }
@@ -99,5 +103,93 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    @apply pb-20 md:pb-0;
+  }
+}
+
+/* Modern & Glass-Style Utility Classes */
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px 0 rgba(0, 104, 55, 0.05);
+  }
+
+  .dark .glass {
+    background: rgba(14, 23, 20, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 20px -2px rgba(0, 104, 55, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .glass-card {
+    background: rgba(16, 26, 22, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px -4px rgba(0, 104, 55, 0.12), 0 4px 12px -2px rgba(243, 112, 33, 0.08);
+    border-color: rgba(0, 104, 55, 0.3);
+  }
+
+  .dark .glass-card-hover:hover {
+    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(243, 112, 33, 0.15);
+    border-color: rgba(30, 157, 88, 0.35);
+  }
+
+  .glass-dock {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 104, 55, 0.08);
+  }
+
+  .dark .glass-dock {
+    background: rgba(14, 22, 19, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-pill {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .dark .glass-pill {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Forest Green and Orange glowing gradient text */
+  .text-brand-gradient {
+    background: linear-gradient(135deg, #006837 0%, #0e874b 50%, #F37021 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }

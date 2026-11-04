@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import {
   Table,
   TableBody,
@@ -22,14 +24,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, ArrowLeft, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Search, XCircle, Eye } from "lucide-react";
 
 const AdminLessons = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ title: "", video_url: "", order: 0 });
+  const [search, setSearch] = useState("");
+  const [form, setForm] = useState({ title: "", video_url: "", description: "", order: 0 });
 
   const { data: course } = useQuery({
     queryKey: ["course", courseId],
@@ -53,33 +57,67 @@ const AdminLessons = () => {
     },
   });
 
+  const filteredLessons = lessons?.filter((l) => 
+    l.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (editing) {
-        const { error } = await supabase.from("lessons").update({
-          title: form.title,
-          video_url: form.video_url,
-          order: form.order,
-        }).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const nextOrder = (lessons?.length || 0) + 1;
-        const { error } = await supabase.from("lessons").insert({
-          course_id: courseId!,
-          title: form.title,
-          video_url: form.video_url,
-          order: form.order || nextOrder,
-        });
-        if (error) throw error;
+      try {
+        console.log("saveMutation execution started. Form state:", form);
+        
+        // Ensure form values are clean and sanitized
+        const payload: any = {
+          title: form.title?.trim() || "",
+          video_url: form.video_url?.trim() || "",
+          description: form.description || "",
+          order: typeof form.order === "number" ? form.order : parseInt(form.order as any) || 0,
+        };
+
+        if (editing) {
+          console.log(`Updating lesson (ID: ${editing.id}) with payload:`, payload);
+          const { data, error } = await supabase
+            .from("lessons")
+            .update(payload)
+            .eq("id", editing.id)
+            .select();
+            
+          console.log("Supabase update response:", { data, error });
+          if (error) throw error;
+          return data;
+        } else {
+          const nextOrder = (lessons?.length || 0) + 1;
+          const insertPayload = {
+            course_id: courseId!,
+            ...payload,
+            order: payload.order || nextOrder,
+          };
+          console.log("Inserting new lesson with payload:", insertPayload);
+          const { data, error } = await supabase
+            .from("lessons")
+            .insert(insertPayload)
+            .select();
+
+          console.log("Supabase insert response:", { data, error });
+          if (error) throw error;
+          return data;
+        }
+      } catch (err) {
+        console.error("Critical error in saveMutation mutationFn:", err);
+        throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("saveMutation onSuccess callback. Result data:", data);
       queryClient.invalidateQueries({ queryKey: ["admin-lessons", courseId] });
       toast.success(editing ? "Lesson updated" : "Lesson added");
       setDialogOpen(false);
       resetForm();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => {
+      console.error("saveMutation onError callback. Error details:", e);
+      toast.error(e.message || "Failed to save lesson");
+    },
   });
 
   const deleteMutation = useMutation({
@@ -94,70 +132,122 @@ const AdminLessons = () => {
   });
 
   const resetForm = () => {
-    setForm({ title: "", video_url: "", order: (lessons?.length || 0) + 1 });
+    setForm({ title: "", video_url: "", description: "", order: (lessons?.length || 0) + 1 });
     setEditing(null);
   };
 
   const openEdit = (lesson: any) => {
+    console.log("Opening edit dialog for lesson:", lesson);
     setEditing(lesson);
-    setForm({ title: lesson.title, video_url: lesson.video_url, order: lesson.order });
+    setForm({
+      title: lesson.title || "",
+      video_url: lesson.video_url || "",
+      description: lesson.description || "",
+      order: lesson.order || 0,
+    });
     setDialogOpen(true);
   };
 
   const openNew = () => {
+    console.log("Opening new lesson dialog.");
     resetForm();
-    setForm({ title: "", video_url: "", order: (lessons?.length || 0) + 1 });
+    setForm({
+      title: "",
+      video_url: "",
+      description: "",
+      order: (lessons?.length || 0) + 1,
+    });
     setDialogOpen(true);
   };
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container py-10">
-        <Link to="/admin/courses" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="h-4 w-4" /> Back to courses
-        </Link>
+        <div className="flex items-center gap-3 mb-6">
+          <Link to="/admin/courses" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to courses
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <button
+            onClick={() => navigate(`/courses/${courseId}`)}
+            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+          >
+            <Eye className="h-4 w-4" /> Preview Course
+          </button>
+        </div>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold font-serif tracking-tight">Lessons</h1>
             {course && <p className="text-muted-foreground mt-1">{course.title}</p>}
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add Lesson</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editing ? "Edit Lesson" : "Add Lesson"}</DialogTitle>
-              </DialogHeader>
-              <form
-                className="space-y-4"
-                onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }}
-              >
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Video URL (YouTube, Vimeo, or Drive)</Label>
-                  <Input 
-                    value={form.video_url} 
-                    onChange={(e) => setForm({ ...form, video_url: e.target.value })} 
-                    required 
-                    placeholder="e.g. https://drive.google.com/file/d/..." 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Order</Label>
-                  <Input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
-                </div>
-                <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? "Saving..." : "Save Lesson"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <div className="relative max-w-xs w-full">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search lessons..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 pr-8"
+              />
+              {search && (
+                <button 
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add Lesson</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editing ? "Edit Lesson" : "Add Lesson"}</DialogTitle>
+                  <DialogDescription>
+                    {editing ? "Update the lesson title, video URL, and display order." : "Fill in the details below to add a new lesson to this course."}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }}
+                >
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Video URL (YouTube, Vimeo, or Drive)</Label>
+                    <Input 
+                      value={form.video_url} 
+                      onChange={(e) => setForm({ ...form, video_url: e.target.value })} 
+                      required 
+                      placeholder="e.g. https://drive.google.com/file/d/..." 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea 
+                      value={form.description} 
+                      onChange={(e) => setForm({ ...form, description: e.target.value })} 
+                      placeholder="Provide details about what's covered in this lesson..."
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Order</Label>
+                    <Input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? "Saving..." : "Save Lesson"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {isLoading ? (
@@ -176,7 +266,7 @@ const AdminLessons = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lessons?.map((lesson) => (
+                {filteredLessons?.map((lesson) => (
                   <TableRow key={lesson.id}>
                     <TableCell className="text-muted-foreground">{lesson.order}</TableCell>
                     <TableCell className="font-medium">{lesson.title}</TableCell>

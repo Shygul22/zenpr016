@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, status, loading } = useAuth();
 
   if (loading) {
     return (
@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children, adminOnly = false }: { children: Reac
   if (!user) return <Navigate to="/login" replace />;
 
   // Redirect to approval status page if not approved and not an admin
-  if (!isAdmin && status && status !== "approved") {
+  if (!isAdmin && status !== "approved") {
     return <Navigate to="/approval-status" replace />;
   }
 
@@ -23,3 +23,4 @@ export const ProtectedRoute = ({ children, adminOnly = false }: { children: Reac
 
   return <>{children}</>;
 };
+

@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -29,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Receipt, Plus } from "lucide-react";
+import { ArrowLeft, Receipt, Plus, Search, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,15 +45,19 @@ const AdminPayments = () => {
     payment_method: "Manual",
   });
 
-  const { data: payments, isLoading } = useQuery({
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [methodFilter, setMethodFilter] = useState("all");
+
+  const { data: payments, isLoading, error: queryError } = useQuery({
     queryKey: ["admin-payments"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
         .select(`
           *,
-          profiles:user_id (name, email),
-          courses:course_id (title)
+          profiles (name, email),
+          courses (title)
         `)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -62,12 +65,24 @@ const AdminPayments = () => {
     },
   });
 
+  const filteredPayments = payments?.filter((p: any) => {
+    const name = p.profiles?.name?.toLowerCase() || "";
+    const email = p.profiles?.email?.toLowerCase() || "";
+    const searchLower = search.toLowerCase();
+    
+    const matchesSearch = name.includes(searchLower) || email.includes(searchLower) || p.payment_method?.toLowerCase().includes(searchLower);
+    const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+    const matchesMethod = methodFilter === "all" || (methodFilter === "Razorpay" ? p.payment_method?.toLowerCase().includes("razorpay") : p.payment_method === methodFilter);
+    
+    return matchesSearch && matchesStatus && matchesMethod;
+  });
+
   const { data: profiles } = useQuery({
     queryKey: ["admin-profiles-approved"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id, name, email")
+        .select("id, name, email")
         .eq("status", "approved");
       if (error) throw error;
       return data;
@@ -98,7 +113,7 @@ const AdminPayments = () => {
         .from("payments")
         .insert({
           user_id: form.user_id,
-          course_id: form.course_id || null,
+          course_id: form.course_id === "none" ? null : (form.course_id || null),
           amount: Number(form.amount),
           status: form.status,
           payment_method: form.payment_method,
@@ -109,7 +124,7 @@ const AdminPayments = () => {
       if (paymentError) throw paymentError;
 
       // 2. Auto-Enroll if completed and course selected
-      if (form.status === "completed" && form.course_id) {
+      if (form.status === "completed" && form.course_id && form.course_id !== "none") {
         const { error: enrollError } = await supabase
           .from("enrollments")
           .upsert({
@@ -143,29 +158,81 @@ const AdminPayments = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container py-10">
         <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <Receipt className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold font-serif tracking-tight">Payment Records</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Receipt className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold font-serif tracking-tight">Payment Records</h1>
+              <p className="text-sm text-muted-foreground">Monitor and manage all course transactions</p>
+            </div>
           </div>
-          <Button onClick={() => setIsAdding(true)} className="gap-2">
+          <Button onClick={() => setIsAdding(true)} className="gap-2 w-full md:w-auto shadow-lg shadow-primary/20">
             <Plus className="h-4 w-4" /> Add Record
           </Button>
         </div>
+
+        <div className="bg-card border rounded-xl p-4 mb-6 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search by student name or email..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-11 bg-muted/30 border-none focus-visible:ring-primary"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-11 bg-muted/30 border-none">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
+                <SelectTrigger className="w-full sm:w-[140px] h-11 bg-muted/30 border-none">
+                  <SelectValue placeholder="Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="Razorpay">Razorpay</SelectItem>
+                  <SelectItem value="Manual">Manual</SelectItem>
+                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {queryError && (
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl mb-6 flex flex-col gap-2">
+            <h3 className="font-bold">Error Loading Data</h3>
+            <p className="text-sm">{(queryError as any).message || "Unknown database error"}</p>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-muted rounded" />)}
           </div>
         ) : (
-          <div className="rounded-lg border bg-card">
-            <Table>
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -177,15 +244,21 @@ const AdminPayments = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments?.map((payment: any) => (
+                {filteredPayments?.map((payment: any) => (
                   <TableRow key={payment.id}>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-sm md:text-base">{payment.profiles?.name || "—"}</span>
-                        <span className="text-xs text-muted-foreground hidden sm:inline">{payment.profiles?.email}</span>
+                        <span className="font-medium text-sm md:text-base">
+                          {(payment.profiles as any)?.name || (payment as any).profiles?.name || "—"}
+                        </span>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                          {(payment.profiles as any)?.email || (payment as any).profiles?.email}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell>{payment.courses?.title || "Manual Adjustment"}</TableCell>
+                    <TableCell>
+                      {(payment.courses as any)?.title || (payment as any).courses?.title || "Manual Adjustment"}
+                    </TableCell>
                     <TableCell className="font-semibold">₹{Number(payment.amount).toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={payment.status === "completed" ? "default" : payment.status === "failed" ? "destructive" : "secondary"}>
@@ -195,8 +268,14 @@ const AdminPayments = () => {
                     <TableCell className="text-muted-foreground hidden md:table-cell">
                       {format(new Date(payment.created_at), "MMM d, yyyy")}
                     </TableCell>
-                    <TableCell className="text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-                      {payment.payment_method}
+                    <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
+                      {payment.payment_method?.toLowerCase().includes("razorpay") ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-mono font-medium text-[11px] border border-primary/20">
+                          {payment.payment_method}
+                        </span>
+                      ) : (
+                        <span className="uppercase tracking-wider">{payment.payment_method}</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -210,6 +289,7 @@ const AdminPayments = () => {
               </TableBody>
             </Table>
           </div>
+        </div>
         )}
 
         <Dialog open={isAdding} onOpenChange={setIsAdding}>
@@ -229,7 +309,7 @@ const AdminPayments = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {profiles?.map((p) => (
-                      <SelectItem key={p.user_id} value={p.user_id}>
+                      <SelectItem key={p.id} value={p.id}>
                         {p.name} ({p.email})
                       </SelectItem>
                     ))}
@@ -283,11 +363,17 @@ const AdminPayments = () => {
 
               <div className="space-y-2">
                 <Label>Payment Method</Label>
-                <Input 
-                  placeholder="e.g. UPI, Cash, Bank Transfer" 
-                  value={form.payment_method} 
-                  onChange={(e) => setForm({ ...form, payment_method: e.target.value })} 
-                />
+                <Select value={form.payment_method} onValueChange={(val) => setForm({ ...form, payment_method: val })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Manual">Manual</SelectItem>
+                    <SelectItem value="UPI">UPI</SelectItem>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>

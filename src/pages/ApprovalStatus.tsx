@@ -1,5 +1,4 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Clock, XCircle, LogOut } from "lucide-react";
 
@@ -8,7 +7,6 @@ const ApprovalStatus = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container flex min-h-[calc(100-64px)] items-center justify-center py-20 px-4">
         <div className="w-full max-w-md text-center">
           {status === "pending" ? (

@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -12,12 +12,15 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ClipboardCheck, CheckCircle2, XCircle, Search } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 const AdminRequests = () => {
   const queryClient = useQueryClient();
+
+  const [search, setSearch] = useState("");
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ["admin-course-requests"],
@@ -36,15 +39,21 @@ const AdminRequests = () => {
     },
   });
 
+  const filteredRequests = requests?.filter((r) => {
+    return r.profiles?.name?.toLowerCase().includes(search.toLowerCase()) || 
+           r.profiles?.email?.toLowerCase().includes(search.toLowerCase()) ||
+           r.courses?.title?.toLowerCase().includes(search.toLowerCase());
+  });
+
   const handleApprove = async (request: any) => {
     try {
       // 1. Enroll user
       const { error: enrollError } = await supabase
         .from("enrollments")
-        .upsert({
-          user_id: request.user_id,
-          course_id: request.course_id,
-        });
+        .upsert(
+          { user_id: request.user_id, course_id: request.course_id },
+          { onConflict: 'user_id,course_id' }
+        );
       if (enrollError) throw enrollError;
 
       // 2. Mark request as approved
@@ -78,15 +87,33 @@ const AdminRequests = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container py-10">
         <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
 
-        <div className="flex items-center gap-3 mb-6">
-          <ClipboardCheck className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold font-serif tracking-tight">Access Requests</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <ClipboardCheck className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold font-serif tracking-tight">Access Requests</h1>
+          </div>
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by student or course..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -105,7 +132,7 @@ const AdminRequests = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests?.map((request) => (
+                {filteredRequests?.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell>
                       <div className="flex flex-col">

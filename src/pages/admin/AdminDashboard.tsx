@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { BookOpen, Users, GraduationCap, ChevronRight, Receipt, ClipboardCheck } from "lucide-react";
+import { BookOpen, Users, GraduationCap, ChevronRight, Receipt, ClipboardCheck, MessageSquare } from "lucide-react";
 
 const AdminDashboard = () => {
   const { data: courseCount } = useQuery({
@@ -51,11 +50,11 @@ const AdminDashboard = () => {
     { label: "Users", value: userCount, icon: Users, href: "/admin/users" },
     { label: "Revenue", value: `₹${(totalRevenue || 0).toLocaleString()}`, icon: Receipt, href: "/admin/payments" },
     { label: "Pending Requests", value: pendingRequests, icon: ClipboardCheck, href: "/admin/requests" },
+    { label: "Support Chat", value: "Active", icon: MessageSquare, href: "/admin/support" },
   ];
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container py-10">
         <h1 className="text-3xl font-bold font-serif tracking-tight mb-8">Admin Dashboard</h1>
 
@@ -103,6 +102,13 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-3">
                 <ClipboardCheck className="h-5 w-5 text-primary" />
                 <span className="font-medium">Access Requests</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link to="/admin/support" className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted transition-colors">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <span className="font-medium">Support Center</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
 import { CourseCard } from "@/components/CourseCard";
 import { BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -74,7 +73,6 @@ const MyCourses = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main className="container py-10">
         <h1 className="text-3xl font-bold font-serif tracking-tight mb-8">My Courses</h1>
 
