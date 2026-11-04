@@ -269,7 +269,10 @@ const AdminCourses = () => {
                     {form.thumbnail_url && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
                         <img 
-                          src={form.thumbnail_url} 
+                          src={form.thumbnail_url.replace(
+                            "mfbyllgfcbihqxuukgcp.supabase.co",
+                            "vowsjebbiusziwotxfhz.supabase.co"
+                          )} 
                           alt="Thumbnail preview" 
                           className="h-full w-full object-cover"
                         />

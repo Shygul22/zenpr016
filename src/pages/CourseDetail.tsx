@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { BookOpen, PlayCircle, Clock, ArrowLeft, Lock, XCircle, CreditCard, Sparkles, ShieldCheck, CheckCircle } from "lucide-react";
 import { openRazorpayCheckout } from "@/lib/razorpay";
+import { CheckoutModal } from "@/components/CheckoutModal";
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ const CourseDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["course", id],
@@ -301,11 +304,43 @@ const CourseDetail = () => {
 
         <div className="grid gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {course.thumbnail_url && (
-              <div className="aspect-video overflow-hidden rounded-xl bg-muted">
-                <img src={course.thumbnail_url} alt={course.title} className="h-full w-full object-cover" />
-              </div>
-            )}
+            {(() => {
+              const resolvedThumbnail = course.thumbnail_url
+                ? course.thumbnail_url.replace(
+                  "mfbyllgfcbihqxuukgcp.supabase.co",
+                  "vowsjebbiusziwotxfhz.supabase.co"
+                )
+                : null;
+
+              return (
+                <div className="aspect-video overflow-hidden rounded-3xl border border-white/50 dark:border-white/10 shadow-lg relative bg-gradient-to-br from-[#006837]/10 via-muted/30 to-[#F37021]/10">
+                  {resolvedThumbnail && !imageError ? (
+                    <img
+                      src={resolvedThumbnail}
+                      alt={course.title}
+                      className="h-full w-full object-cover"
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full w-full p-8 text-center relative overflow-hidden">
+                      <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#006837]/15 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#F37021]/15 rounded-full blur-3xl pointer-events-none" />
+                      <div className="relative z-10 flex flex-col items-center">
+                        <div className="h-16 w-16 rounded-2xl bg-white shadow-xl ring-2 ring-primary/20 flex items-center justify-center overflow-hidden mb-4">
+                          <img src="/logo.jpeg" alt="Option Tamil Trader" className="h-full w-full object-cover" />
+                        </div>
+                        <h2 className="text-xl md:text-2xl font-bold font-serif text-foreground max-w-md">
+                          {course.title}
+                        </h2>
+                        <span className="mt-2 text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                          Option Tamil Trader
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div>
               <h1 className="text-3xl font-bold font-serif tracking-tight mb-3">{course.title}</h1>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{course.description}</p>
@@ -374,11 +409,10 @@ const CourseDetail = () => {
                     variant="secondary"
                     className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all"
                     size="lg"
-                    onClick={handlePurchaseCourse}
-                    disabled={isProcessingPayment}
+                    onClick={() => setCheckoutOpen(true)}
                   >
                     <CreditCard className="mr-2 h-5 w-5" />
-                    {isProcessingPayment ? "Opening Razorpay..." : `Enroll Now • ₹${Number(course.price).toLocaleString()}`}
+                    {`Enroll Now • ₹${Number(course.price).toLocaleString()}`}
                   </Button>
                 ) : (
                   <Button
@@ -394,10 +428,10 @@ const CourseDetail = () => {
                 )
               ) : (
                 /* 3. Guest / not logged in: prompt to login */
-                <Button 
-                  variant="secondary" 
-                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-orange-500/20" 
-                  size="lg" 
+                <Button
+                  variant="secondary"
+                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-orange-500/20"
+                  size="lg"
                   onClick={() => navigate("/login")}
                 >
                   <Lock className="mr-2 h-5 w-5" />
@@ -438,6 +472,26 @@ const CourseDetail = () => {
             )}
           </div>
         </div>
+
+        {course && user && (
+          <CheckoutModal
+            isOpen={checkoutOpen}
+            onClose={() => setCheckoutOpen(false)}
+            course={{
+              id: course.id,
+              title: course.title,
+              price: Number(course.price || 0),
+              thumbnail_url: course.thumbnail_url,
+            }}
+            user={{
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+            }}
+            firstLessonId={lessons?.[0]?.id}
+          />
+        )}
       </main>
     </div>
   );

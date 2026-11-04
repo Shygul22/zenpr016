@@ -28,9 +28,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Receipt, Plus, Search, XCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Receipt, Plus, Search, XCircle, Tag, Trash2, Check, Percent, Settings2 } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const AdminPayments = () => {
@@ -48,6 +50,131 @@ const AdminPayments = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
+
+  // Coupons & Additional Fees Management State
+  const [isManagingCoupons, setIsManagingCoupons] = useState(false);
+  const [feeForm, setFeeForm] = useState({
+    additional_fee: "0",
+    additional_fee_label: "Platform & Processing Fee",
+  });
+  const [couponForm, setCouponForm] = useState({
+    code: "",
+    discount_type: "percentage" as "percentage" | "fixed",
+    discount_value: "10",
+    active: true,
+  });
+
+  // Query global settings for additional fee
+  const { data: settingsData } = useQuery({
+    queryKey: ["admin-fee-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("settings" as any)
+        .select("additional_fee, additional_fee_label")
+        .eq("id", "global")
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (settingsData) {
+      setFeeForm({
+        additional_fee: (settingsData.additional_fee ?? 0).toString(),
+        additional_fee_label: settingsData.additional_fee_label || "Platform & Processing Fee",
+      });
+    }
+  }, [settingsData]);
+
+  // Query coupons list
+  const { data: couponsList, refetch: refetchCoupons } = useQuery({
+    queryKey: ["admin-coupons-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("coupons" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) return [];
+      return data || [];
+    },
+  });
+
+  // Save additional fee
+  const handleSaveFeeSettings = async () => {
+    try {
+      const { error } = await supabase.from("settings" as any).upsert({
+        id: "global",
+        additional_fee: Number(feeForm.additional_fee || 0),
+        additional_fee_label: feeForm.additional_fee_label,
+      });
+
+      if (error) throw error;
+      toast.success("Additional fee settings saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-fee-settings"] });
+    } catch (err: any) {
+      toast.error("Failed to save fee settings: " + (err.message || ""));
+    }
+  };
+
+  // Add new coupon
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = couponForm.code.trim().toUpperCase();
+    if (!cleanCode) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("coupons" as any).insert({
+        code: cleanCode,
+        discount_type: couponForm.discount_type,
+        discount_value: Number(couponForm.discount_value),
+        active: couponForm.active,
+      });
+
+      if (error) throw error;
+      toast.success(`Coupon code ${cleanCode} created!`);
+      setCouponForm({
+        code: "",
+        discount_type: "percentage",
+        discount_value: "10",
+        active: true,
+      });
+      refetchCoupons();
+    } catch (err: any) {
+      toast.error("Failed to create coupon: " + (err.message || "Make sure coupons table exists"));
+    }
+  };
+
+  // Toggle coupon active
+  const handleToggleCoupon = async (id: string, currentActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("coupons" as any)
+        .update({ active: !currentActive })
+        .eq("id", id);
+
+      if (error) throw error;
+      refetchCoupons();
+      toast.success("Coupon status updated");
+    } catch (err: any) {
+      toast.error("Failed to update coupon status");
+    }
+  };
+
+  // Delete coupon
+  const handleDeleteCoupon = async (id: string) => {
+    try {
+      const { error } = await supabase.from("coupons" as any).delete().eq("id", id);
+      if (error) throw error;
+      refetchCoupons();
+      toast.success("Coupon deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete coupon");
+    }
+  };
 
   const { data: allProfiles } = useQuery({
     queryKey: ["admin-all-profiles-map"],
@@ -197,9 +324,18 @@ const AdminPayments = () => {
               <p className="text-sm text-muted-foreground">Monitor and manage all course transactions</p>
             </div>
           </div>
-          <Button onClick={() => setIsAdding(true)} className="gap-2 w-full md:w-auto shadow-lg shadow-primary/20">
-            <Plus className="h-4 w-4" /> Add Record
-          </Button>
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setIsManagingCoupons(true)}
+              className="gap-2 w-full sm:w-auto border-border/80 hover:border-[#F37021]/60 hover:text-[#F37021] glass-card"
+            >
+              <Tag className="h-4 w-4 text-[#F37021]" /> Coupons & Additional Fees
+            </Button>
+            <Button onClick={() => setIsAdding(true)} className="gap-2 w-full sm:w-auto shadow-lg shadow-primary/20">
+              <Plus className="h-4 w-4" /> Add Record
+            </Button>
+          </div>
         </div>
 
         <div className="bg-card border rounded-xl p-4 mb-6 space-y-4">
@@ -411,6 +547,168 @@ const AdminPayments = () => {
               <Button onClick={handleSaveRecord} disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save Record"}
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Manage Coupons & Additional Fees Dialog */}
+        <Dialog open={isManagingCoupons} onOpenChange={setIsManagingCoupons}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 glass-card shadow-2xl">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-xl font-bold font-serif flex items-center gap-2">
+                <Tag className="h-5 w-5 text-[#F37021]" />
+                Manage Coupons & Additional Fees
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Set platform/processing fees and create discount coupon codes for students at checkout.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Tabs defaultValue="coupons" className="w-full">
+              <TabsList className="grid grid-cols-2 mb-6">
+                <TabsTrigger value="coupons" className="font-semibold gap-2">
+                  <Tag className="h-4 w-4" /> Coupon Codes
+                </TabsTrigger>
+                <TabsTrigger value="fees" className="font-semibold gap-2">
+                  <Settings2 className="h-4 w-4" /> Additional Fees
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Tab 1: Coupon Codes */}
+              <TabsContent value="coupons" className="space-y-6">
+                {/* Create Coupon Form */}
+                <form onSubmit={handleCreateCoupon} className="p-4 rounded-2xl bg-muted/40 border border-border/70 space-y-4">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Create New Coupon</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Coupon Code</Label>
+                      <Input
+                        value={couponForm.code}
+                        onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                        placeholder="e.g. OTT20"
+                        className="uppercase font-mono"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Discount Type</Label>
+                      <Select
+                        value={couponForm.discount_type}
+                        onValueChange={(val: "percentage" | "fixed") => setCouponForm({ ...couponForm, discount_type: val })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentage (% OFF)</SelectItem>
+                          <SelectItem value="fixed">Fixed (₹ Flat OFF)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Discount Value</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={couponForm.discount_value}
+                        onChange={(e) => setCouponForm({ ...couponForm, discount_value: e.target.value })}
+                        placeholder="10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={couponForm.active}
+                        onCheckedChange={(checked) => setCouponForm({ ...couponForm, active: checked })}
+                      />
+                      <span className="text-xs font-medium">Active Immediately</span>
+                    </div>
+                    <Button type="submit" size="sm" variant="secondary" className="shadow-md shadow-orange-500/20 font-semibold">
+                      <Plus className="h-4 w-4 mr-1" /> Add Coupon
+                    </Button>
+                  </div>
+                </form>
+
+                {/* Coupons List */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Existing Coupons</h4>
+                  {couponsList && couponsList.length > 0 ? (
+                    <div className="divide-y border rounded-2xl overflow-hidden bg-card/60">
+                      {couponsList.map((c: any) => (
+                        <div key={c.id} className="p-3.5 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-mono font-bold text-xs border border-primary/20">
+                              {c.code}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {c.discount_type === "percentage" ? `${c.discount_value}% OFF` : `₹${c.discount_value} Flat OFF`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <Switch
+                                checked={c.active}
+                                onCheckedChange={() => handleToggleCoupon(c.id, c.active)}
+                              />
+                              <span className="text-xs text-muted-foreground">{c.active ? "Active" : "Paused"}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteCoupon(c.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center border border-dashed rounded-2xl text-muted-foreground text-xs">
+                      No custom coupons created yet. Default promo codes <span className="font-mono font-bold text-foreground">WELCOME10</span> (10% OFF) and <span className="font-mono font-bold text-foreground">OTT10</span> are active.
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Tab 2: Additional Fees Settings */}
+              <TabsContent value="fees" className="space-y-4">
+                <div className="p-5 rounded-2xl bg-muted/40 border border-border/70 space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Additional Fee Amount (₹)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={feeForm.additional_fee}
+                      onChange={(e) => setFeeForm({ ...feeForm, additional_fee: e.target.value })}
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Set to 0 if you do not want to charge any additional fees. For example: 49 for ₹49 platform fee.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Fee Label (Shown on Student Bill)</Label>
+                    <Input
+                      value={feeForm.additional_fee_label}
+                      onChange={(e) => setFeeForm({ ...feeForm, additional_fee_label: e.target.value })}
+                      placeholder="Platform & Processing Fee"
+                    />
+                  </div>
+
+                  <Button type="button" onClick={handleSaveFeeSettings} className="w-full font-semibold shadow-md">
+                    Save Additional Fee Settings
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setIsManagingCoupons(false)}>Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

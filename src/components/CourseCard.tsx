@@ -24,19 +24,29 @@ export const CourseCard = ({ id, title, description, thumbnail_url, lessonCount,
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent z-10" />
 
         <div className="aspect-video overflow-hidden bg-muted relative">
-          {thumbnail_url && !imageError ? (
-            <img
-              src={thumbnail_url}
-              alt={title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-[#F37021]/10">
-              <BookOpen className="h-12 w-12 text-primary/40" />
-            </div>
-          )}
+          {(() => {
+            const resolvedThumbnail = thumbnail_url
+              ? thumbnail_url.replace(
+                  "mfbyllgfcbihqxuukgcp.supabase.co",
+                  "vowsjebbiusziwotxfhz.supabase.co"
+                )
+              : null;
+
+            return resolvedThumbnail && !imageError ? (
+              <img
+                src={resolvedThumbnail}
+                alt={title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-primary/10 to-[#F37021]/10 p-4 text-center">
+                <BookOpen className="h-10 w-10 text-primary/50 mb-2" />
+                <span className="text-xs font-semibold text-muted-foreground line-clamp-1">{title}</span>
+              </div>
+            );
+          })()}
 
           {/* Floating Glass Pill for Lesson Count */}
           <div className="absolute top-3 right-3 glass-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs font-semibold text-foreground shadow-sm">
