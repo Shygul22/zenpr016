@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Carousel,
   CarouselContent,
@@ -8,7 +10,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Megaphone,
@@ -21,6 +22,7 @@ import {
   Sparkles,
   Pin,
   Flame,
+  PlusCircle,
 } from "lucide-react";
 
 export type PostCategory =
@@ -45,50 +47,6 @@ export interface PostItem {
   order_index?: number;
   created_at?: string;
 }
-
-// Fallback seed posts if database table is empty initially
-const DEFAULT_POSTS: PostItem[] = [
-  {
-    id: "seed-telegram",
-    title: "Join Official Option Tamil Trader Telegram",
-    content: "Get daily market pre-open analysis, Nifty/BankNifty option levels, and live updates directly from mentors.",
-    category: "telegram",
-    link_url: "https://t.me/optiontamiltrader",
-    link_text: "Join Telegram Channel",
-    badge_text: "Active Community",
-    pinned: true,
-  },
-  {
-    id: "seed-indicator",
-    title: "Free OTT Trend & Scalp TradingView Indicator",
-    content: "Access our proprietary Pine Script indicator for TradingView for pinpoint reversal entries and dynamic trailing stop loss.",
-    category: "free_indicator",
-    link_url: "https://in.tradingview.com",
-    link_text: "Get Free Indicator",
-    badge_text: "Free Script",
-    pinned: true,
-  },
-  {
-    id: "seed-youtube",
-    title: "Watch: Complete Zero to Hero Option Selling Strategy",
-    content: "Detailed breakdown on managing expiry volatility, delta hedging, and theta decay rules explained in pure Tamil.",
-    category: "youtube",
-    link_url: "https://www.youtube.com/@optiontamiltrader",
-    link_text: "Watch on YouTube",
-    badge_text: "Video Lesson",
-    pinned: false,
-  },
-  {
-    id: "seed-form",
-    title: "Student Feedback & Indicator Access Request Form",
-    content: "Submit your TradingView username and get whitelisted for VIP indicators and live strategy updates.",
-    category: "google_form",
-    link_url: "https://forms.google.com",
-    link_text: "Fill Google Form",
-    badge_text: "Instant Access",
-    pinned: false,
-  },
-];
 
 export const getCategoryConfig = (category: PostCategory) => {
   switch (category) {
@@ -151,33 +109,71 @@ export const getCategoryConfig = (category: PostCategory) => {
 };
 
 export const HomePostsCarousel = () => {
+  const { isAdmin } = useAuth();
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
+  // 100% Dynamic: Fetches purely from Supabase posts table
   const { data: posts, isLoading } = useQuery<PostItem[]>({
     queryKey: ["home-posts"],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("posts")
-          .select("*")
-          .eq("active", true)
-          .order("pinned", { ascending: false })
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("active", true)
+        .order("pinned", { ascending: false })
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.warn("Could not load posts from database, using fallback defaults:", error.message);
-          return DEFAULT_POSTS;
-        }
-
-        return data && data.length > 0 ? (data as PostItem[]) : DEFAULT_POSTS;
-      } catch (err) {
-        console.warn("Failed fetching posts:", err);
-        return DEFAULT_POSTS;
+      if (error) {
+        console.error("Error loading posts from database:", error);
+        return [];
       }
+
+      return (data || []) as PostItem[];
     },
   });
 
-  const displayPosts = posts || DEFAULT_POSTS;
+  // If loading, render elegant shimmer skeleton
+  if (isLoading) {
+    return (
+      <section className="mb-14">
+        <div className="flex items-center justify-between mb-5">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-muted animate-pulse rounded-lg" />
+            <div className="h-4 w-72 bg-muted/60 animate-pulse rounded-lg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-72 rounded-3xl glass-card bg-muted/30 animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // If no posts in database:
+  // If user is Admin, show prompt to add posts. If visitor, hide section cleanly.
+  if (!posts || posts.length === 0) {
+    if (!isAdmin) return null;
+
+    return (
+      <section className="mb-14">
+        <div className="glass-card rounded-3xl border border-dashed border-primary/40 p-8 text-center bg-primary/5">
+          <Megaphone className="h-10 w-10 text-primary mx-auto mb-3" />
+          <h3 className="font-bold text-lg font-serif">Home Posts Carousel (Admin Notice)</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mt-1 mb-4">
+            No active posts found in the database. When you create announcements, free indicator links, or community posts, they will swipe here.
+          </p>
+          <Link to="/admin/posts">
+            <Button className="bg-[#006837] hover:bg-[#00522c] text-white rounded-xl gap-2 shadow-md">
+              <PlusCircle className="h-4 w-4" />
+              <span>Create First Post</span>
+            </Button>
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-14">
@@ -194,21 +190,32 @@ export const HomePostsCarousel = () => {
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/40 px-3 py-1 rounded-full border border-border/40">
-          <Sparkles className="h-3.5 w-3.5 text-[#F37021]" />
-          <span>{displayPosts.length} Active Posts</span>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Link to="/admin/posts">
+              <Button variant="ghost" size="sm" className="text-xs text-primary gap-1 h-8 rounded-full">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span>Manage Posts</span>
+              </Button>
+            </Link>
+          )}
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/40 px-3 py-1 rounded-full border border-border/40">
+            <Sparkles className="h-3.5 w-3.5 text-[#F37021]" />
+            <span>{posts.length} {posts.length === 1 ? "Post" : "Posts"}</span>
+          </div>
         </div>
       </div>
 
       <Carousel
         opts={{
           align: "start",
-          loop: displayPosts.length > 2,
+          loop: posts.length > 2,
         }}
         className="w-full relative"
       >
         <CarouselContent className="-ml-3 md:-ml-4">
-          {displayPosts.map((post) => {
+          {posts.map((post) => {
             const config = getCategoryConfig(post.category);
             const Icon = config.icon;
             const hasCustomImage = post.image_url && !imageErrors[post.id];
@@ -312,12 +319,13 @@ export const HomePostsCarousel = () => {
           })}
         </CarouselContent>
 
-        <div className="hidden sm:block">
-          <CarouselPrevious className="-left-4 bg-background/80 backdrop-blur-md border-border/60 hover:bg-primary hover:text-white transition-colors" />
-          <CarouselNext className="-right-4 bg-background/80 backdrop-blur-md border-border/60 hover:bg-primary hover:text-white transition-colors" />
-        </div>
+        {posts.length > 1 && (
+          <div className="hidden sm:block">
+            <CarouselPrevious className="-left-4 bg-background/80 backdrop-blur-md border-border/60 hover:bg-primary hover:text-white transition-colors" />
+            <CarouselNext className="-right-4 bg-background/80 backdrop-blur-md border-border/60 hover:bg-primary hover:text-white transition-colors" />
+          </div>
+        )}
       </Carousel>
     </section>
   );
 };
-

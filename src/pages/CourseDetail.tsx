@@ -17,6 +17,7 @@ const CourseDetail = () => {
   const queryClient = useQueryClient();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
@@ -314,15 +315,9 @@ const CourseDetail = () => {
 
               return (
                 <div className="aspect-video overflow-hidden rounded-3xl border border-white/50 dark:border-white/10 shadow-lg relative bg-gradient-to-br from-[#006837]/10 via-muted/30 to-[#F37021]/10">
-                  {resolvedThumbnail && !imageError ? (
-                    <img
-                      src={resolvedThumbnail}
-                      alt={course.title}
-                      className="h-full w-full object-cover"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full w-full p-8 text-center relative overflow-hidden">
+                  {/* Fallback branded banner rendered behind/if failed */}
+                  {(!resolvedThumbnail || imageError || !imageLoaded) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center overflow-hidden">
                       <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#006837]/15 rounded-full blur-3xl pointer-events-none" />
                       <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#F37021]/15 rounded-full blur-3xl pointer-events-none" />
                       <div className="relative z-10 flex flex-col items-center">
@@ -337,6 +332,18 @@ const CourseDetail = () => {
                         </span>
                       </div>
                     </div>
+                  )}
+
+                  {resolvedThumbnail && !imageError && (
+                    <img
+                      src={resolvedThumbnail}
+                      alt=""
+                      className={`relative z-10 h-full w-full object-cover transition-opacity duration-300 ${
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => setImageError(true)}
+                    />
                   )}
                 </div>
               );

@@ -16,6 +16,7 @@ type CourseCardProps = {
 
 export const CourseCard = ({ id, title, description, thumbnail_url, lessonCount, price, progress }: CourseCardProps) => {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <Link to={`/courses/${id}`} className="block group">
@@ -32,19 +33,27 @@ export const CourseCard = ({ id, title, description, thumbnail_url, lessonCount,
                 )
               : null;
 
-            return resolvedThumbnail && !imageError ? (
-              <img
-                src={resolvedThumbnail}
-                alt={title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-primary/10 to-[#F37021]/10 p-4 text-center">
-                <BookOpen className="h-10 w-10 text-primary/50 mb-2" />
-                <span className="text-xs font-semibold text-muted-foreground line-clamp-1">{title}</span>
-              </div>
+            return (
+              <>
+                {(!resolvedThumbnail || imageError || !imageLoaded) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-[#F37021]/10 p-4 text-center">
+                    <BookOpen className="h-10 w-10 text-primary/50 mb-2" />
+                    <span className="text-xs font-semibold text-muted-foreground line-clamp-1">{title}</span>
+                  </div>
+                )}
+                {resolvedThumbnail && !imageError && (
+                  <img
+                    src={resolvedThumbnail}
+                    alt=""
+                    className={`relative z-10 h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                      imageLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    loading="lazy"
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                  />
+                )}
+              </>
             );
           })()}
 

@@ -272,7 +272,7 @@ export const AdminPosts = () => {
               <Megaphone className="h-10 w-10 text-muted-foreground/40 mx-auto" />
               <h3 className="font-semibold text-lg">No posts published yet</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                The home screen is currently showing default starter posts. Click "Create New Post" above to add your first real update!
+                No posts found in the database. Click "Create New Post" above to publish your first announcement, indicator link, form, or channel link!
               </p>
               <Button onClick={openCreateDialog} variant="outline" className="rounded-xl mt-2">
                 Create First Post
