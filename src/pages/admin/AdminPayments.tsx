@@ -49,6 +49,39 @@ const AdminPayments = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
 
+  const { data: allProfiles } = useQuery({
+    queryKey: ["admin-all-profiles-map"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, user_id, name, email, phone");
+      if (error) return [];
+      return data || [];
+    },
+  });
+
+  const profileMap = (allProfiles || []).reduce((acc: Record<string, any>, p: any) => {
+    if (p.id) acc[p.id] = p;
+    if (p.user_id) acc[p.user_id] = p;
+    return acc;
+  }, {});
+
+  const { data: courses } = useQuery({
+    queryKey: ["admin-courses-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, title, price");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const courseMap = (courses || []).reduce((acc: Record<string, any>, c: any) => {
+    if (c.id) acc[c.id] = c;
+    return acc;
+  }, {});
+
   const { data: payments, isLoading, error: queryError } = useQuery({
     queryKey: ["admin-payments"],
     queryFn: async () => {
@@ -66,11 +99,14 @@ const AdminPayments = () => {
   });
 
   const filteredPayments = payments?.filter((p: any) => {
-    const name = p.profiles?.name?.toLowerCase() || "";
-    const email = p.profiles?.email?.toLowerCase() || "";
+    const student = p.profiles || profileMap[p.user_id];
+    const course = p.courses || courseMap[p.course_id];
+    const name = student?.name?.toLowerCase() || "";
+    const email = student?.email?.toLowerCase() || "";
+    const courseTitle = course?.title?.toLowerCase() || "";
     const searchLower = search.toLowerCase();
     
-    const matchesSearch = name.includes(searchLower) || email.includes(searchLower) || p.payment_method?.toLowerCase().includes(searchLower);
+    const matchesSearch = name.includes(searchLower) || email.includes(searchLower) || courseTitle.includes(searchLower) || p.payment_method?.toLowerCase().includes(searchLower);
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
     const matchesMethod = methodFilter === "all" || (methodFilter === "Razorpay" ? p.payment_method?.toLowerCase().includes("razorpay") : p.payment_method === methodFilter);
     
@@ -82,19 +118,7 @@ const AdminPayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, name, email")
-        .eq("status", "approved");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: courses } = useQuery({
-    queryKey: ["admin-courses-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("id, title, price");
+        .select("id, name, email");
       if (error) throw error;
       return data;
     },
@@ -244,21 +268,26 @@ const AdminPayments = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayments?.map((payment: any) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm md:text-base">
-                          {(payment.profiles as any)?.name || (payment as any).profiles?.name || "—"}
+                {filteredPayments?.map((payment: any) => {
+                  const student = payment.profiles || profileMap[payment.user_id];
+                  const course = payment.courses || courseMap[payment.course_id];
+                  return (
+                    <TableRow key={payment.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm md:text-base text-foreground">
+                            {student?.name || "Student (" + (payment.user_id?.slice(0, 8) || "—") + ")"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {student?.email || student?.phone || "No email available"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">
+                          {course?.title || (payment.course_id ? "Course ID: " + payment.course_id.slice(0, 8) : "Manual Adjustment")}
                         </span>
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          {(payment.profiles as any)?.email || (payment as any).profiles?.email}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {(payment.courses as any)?.title || (payment as any).courses?.title || "Manual Adjustment"}
-                    </TableCell>
+                      </TableCell>
                     <TableCell className="font-semibold">₹{Number(payment.amount).toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant={payment.status === "completed" ? "default" : payment.status === "failed" ? "destructive" : "secondary"}>
@@ -278,7 +307,8 @@ const AdminPayments = () => {
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
+                );
+              })}
                 {payments?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
