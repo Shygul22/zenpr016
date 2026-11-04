@@ -338,9 +338,8 @@ const CourseDetail = () => {
                     <img
                       src={resolvedThumbnail}
                       alt=""
-                      className={`relative z-10 h-full w-full object-cover transition-opacity duration-300 ${
-                        imageLoaded ? "opacity-100" : "opacity-0"
-                      }`}
+                      className={`relative z-10 h-full w-full object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"
+                        }`}
                       onLoad={() => setImageLoaded(true)}
                       onError={() => setImageError(true)}
                     />
